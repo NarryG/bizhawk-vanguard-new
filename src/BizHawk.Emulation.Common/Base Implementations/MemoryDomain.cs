@@ -23,7 +23,11 @@ namespace BizHawk.Emulation.Common
 
 		public Endian EndianType { get; protected set; }
 
-		public bool Writable { get; protected set; }
+		public bool Writable
+		{
+			get => true;
+			set {}
+		}
 
 		public abstract byte PeekByte(long addr);
 

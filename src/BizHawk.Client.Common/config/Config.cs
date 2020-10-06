@@ -315,6 +315,8 @@ namespace BizHawk.Client.Common
 
 		public EHostInputMethod HostInputMethod { get; set; } = OSTailoredCode.IsUnixHost ? EHostInputMethod.OpenTK : EHostInputMethod.DirectInput;
 
-		public bool UseStaticWindowTitles { get; set; }
+		public bool UseStaticWindowTitles { get; set; } = true;
+
+		public bool HexEditorAllowBackgroundInput { get; set; } = false;
 	}
 }

@@ -2283,5 +2283,11 @@ namespace BizHawk.Client.EmuHawk
 			var str = sw.ToString();
 			MessageBox.Show(str);
 		}
+
+		private void allowBackgroundInputToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			GlobalWin.Config.HexEditorAllowBackgroundInput = !GlobalWin.Config.HexEditorAllowBackgroundInput;
+			allowBackgroundInputToolStripMenuItem.Checked = GlobalWin.Config.HexEditorAllowBackgroundInput;
+		}
 	}
 } 

@@ -118,19 +118,7 @@ namespace BizHawk.Client.EmuHawk
 			SetStatusBar();
 			_stateSlots.Update(Emulator, MovieSession.Movie, SaveStatePrefix());
 
-			// New version notification
-			UpdateChecker.CheckComplete += (s2, e2) =>
-			{
-				if (IsDisposed)
-				{
-					return;
-				}
-
-				this.BeginInvoke(() => { UpdateNotification.Visible = UpdateChecker.IsNewVersionAvailable; });
-			};
-			UpdateChecker.GlobalConfig = Config;
-			UpdateChecker.BeginCheck(); // Won't actually check unless enabled by user
-
+			
 			// open requested ext. tool
 			var requestedExtToolDll = _argParser.openExtToolDll;
 			if (requestedExtToolDll != null)
@@ -150,6 +138,10 @@ namespace BizHawk.Client.EmuHawk
 					Console.WriteLine($"requested ext. tool dll {requestedExtToolDll} could not be loaded");
 				}
 			}
+
+			this.ResizeEnd += new System.EventHandler(this.MainForm_ResizeEnd);
+
+			RTCV.BizhawkVanguard.Hooks.MAINFORM_FORM_LOAD_END();
 		}
 
 		static MainForm()
@@ -413,7 +405,10 @@ namespace BizHawk.Client.EmuHawk
 				if (ActiveForm is HotkeyConfig
 					|| ActiveForm is ControllerConfig
 					|| ActiveForm is TAStudio
-					|| ActiveForm is VirtualpadTool)
+					|| ActiveForm is VirtualpadTool
+					//RTC_Hijack : Polling RTC focus for Background input
+					|| RTCV.BizhawkVanguard.Hooks.IsAllowedBackgroundInputForm()
+					)//---
 				{
 					return Input.AllowInput.All;
 				}
@@ -1161,8 +1156,8 @@ namespace BizHawk.Client.EmuHawk
 				Util.DebugWriteLine($"  For virtual size {new Size(_currentVideoProvider.VirtualWidth, _currentVideoProvider.VirtualHeight)}:");
 				Util.DebugWriteLine($"  Selecting display size {lastComputedSize}");
 
-				// Change size
-				Size = new Size(lastComputedSize.Width + borderWidth, lastComputedSize.Height + borderHeight);
+				//// Change size
+				//Size = new Size(lastComputedSize.Width + borderWidth, lastComputedSize.Height + borderHeight);
 				PerformLayout();
 				PresentationPanel.Resized = true;
 
@@ -1608,8 +1603,8 @@ namespace BizHawk.Client.EmuHawk
 			{
 				var sb = new StringBuilder();
 				if (!string.IsNullOrEmpty(VersionInfo.CustomBuildString)) sb.Append($"{VersionInfo.CustomBuildString} ");
-				sb.Append("BizHawk");
-				if (VersionInfo.DeveloperBuild) sb.Append(" (interim)");
+				sb.Append("BizHawk - RTC");
+				//if (VersionInfo.DeveloperBuild) sb.Append(" (interim)");
 				return sb.ToString();
 			}
 		}
@@ -2219,7 +2214,7 @@ namespace BizHawk.Client.EmuHawk
 		{
 			using var ofd = new OpenFileDialog
 			{
-				InitialDirectory = Config.PathEntries.RomAbsolutePath(Emulator.SystemId),
+				InitialDirectory = Config.PathEntries.LastRomPath, //RTC_Hijack - Fix lastrompath
 				Filter = RomLoader.RomFilter,
 				RestoreDirectory = false,
 				FilterIndex = _lastOpenRomFilter
@@ -2308,7 +2303,7 @@ namespace BizHawk.Client.EmuHawk
 			}
 		}
 
-		private void SaveConfig(string path = "")
+		public void SaveConfig(string path = "")
 		{
 			if (Config.SaveWindowPosition)
 			{
@@ -2767,7 +2762,7 @@ namespace BizHawk.Client.EmuHawk
 			}
 		}
 
-		private void LoadConfigFile(string iniPath)
+		public void LoadConfigFile(string iniPath)
 		{
 			if (!VersionInfo.DeveloperBuild && !ConfigService.IsFromSameVersion(iniPath, out var msg))
 			{
@@ -2892,6 +2887,9 @@ namespace BizHawk.Client.EmuHawk
 				OSD.ClearGuiText();
 
 				CheatList.Pulse();
+				
+				//RTC_Hijack - Step for frame 0. Note the true on the end. We handle doing nothing for any step after the first one in the method itself
+				RTCV.BizhawkVanguard.Hooks.CPU_STEP(isRewinding, isFastForwarding, true);
 
 				// zero 03-may-2014 - moved this before call to UpdateToolsBefore(), since it seems to clear the state which a lua event.framestart is going to want to alter
 				InputManager.ClickyVirtualPadController.FrameTick();
@@ -2977,6 +2975,10 @@ namespace BizHawk.Client.EmuHawk
 				InputManager.AutofireStickyXorAdapter.IncrementLoops(Emulator.CanPollInput() && Emulator.AsInputPollable().IsLagFrame);
 
 				PressFrameAdvance = false;
+				
+				//RTC_HIJACK : Hooking the step here as it's just before the tools update
+				RTCV.BizhawkVanguard.Hooks.CPU_STEP(isRewinding, isFastForwarding);
+				//---------------------------------------
 
 				if (IsTurboing)
 				{
@@ -3106,7 +3108,7 @@ namespace BizHawk.Client.EmuHawk
 		/// <summary>
 		/// start AV recording
 		/// </summary>
-		private void RecordAvBase(string videoWriterName, string filename, bool unattended)
+		public void RecordAvBase(string videoWriterName, string filename, bool unattended)
 		{
 			if (_currAviWriter != null) return;
 
@@ -3302,7 +3304,7 @@ namespace BizHawk.Client.EmuHawk
 			RewireSound();
 		}
 
-		private void StopAv()
+		public void StopAv()
 		{
 			if (_currAviWriter == null)
 			{
@@ -3519,7 +3521,12 @@ namespace BizHawk.Client.EmuHawk
 			if (args.OpenAdvanced is OpenAdvanced_OpenRom)
 			{
 				var leftPart = path.Split('|')[0];
-				Config.PathEntries.LastRomPath = Path.GetFullPath(Path.GetDirectoryName(leftPart) ?? "");
+				//RTC_Hijack - Don't set this if it's an RTC dir
+				string fullPath = Path.GetFullPath(Path.GetDirectoryName(leftPart));
+				if (!fullPath.Contains("\\WORKING") && !fullPath.Contains("\\ASSETS"))
+				{
+					Config.PathEntries.LastRomPath = Path.GetFullPath(Path.GetDirectoryName(leftPart) ?? "");
+				}
 			}
 
 			return true;
@@ -3528,6 +3535,10 @@ namespace BizHawk.Client.EmuHawk
 		// Still needs a good bit of refactoring
 		private bool LoadRomInternal(string path, LoadRomArgs args, out bool failureIsFromAskSave)
 		{
+			//RTC_HIJACK : Hook at beginning of LoadRom
+			RTCV.BizhawkVanguard.Hooks.LOAD_GAME_BEGIN();
+			//----------
+
 			failureIsFromAskSave = false;
 			if (path == null)
 				throw new ArgumentNullException(nameof(path));
@@ -3777,6 +3788,10 @@ namespace BizHawk.Client.EmuHawk
 					}
 
 					ClientApi.OnRomLoaded(Emulator);
+					
+					//RTC_HIJACK : Hook at the end of LoadRom
+					RTCV.BizhawkVanguard.Hooks.LOAD_GAME_DONE();
+					//----------
 					return true;
 				}
 				else if (Emulator.IsNull())
@@ -3784,6 +3799,10 @@ namespace BizHawk.Client.EmuHawk
 					// This shows up if there's a problem
 					ClientApi.UpdateEmulatorAndVP(Emulator);
 					OnRomChanged();
+					
+					//RTC_HIJACK : Hook at LoadRom failure
+					RTCV.BizhawkVanguard.Hooks.LOAD_GAME_FAILED();
+					//----------
 					return false;
 				}
 				else
@@ -4452,5 +4471,16 @@ namespace BizHawk.Client.EmuHawk
 		}
 
 		public DialogResult ShowDialogAsChild(Form dialog) => dialog.ShowDialog(this);
+
+		
+		private void MainForm_ResizeEnd(object sender, EventArgs e)
+		{
+			//RTC_HIJACK : MainForm_ResizeEnd
+
+			//This event function might not exist if the bizhawk gets updated.
+			//Just do recreate the ResizeEnd Event and bind the hook to it.
+			RTCV.BizhawkVanguard.Hooks.MAINFORM_RESIZEEND();
+			//------------
+		}
 	}
 }

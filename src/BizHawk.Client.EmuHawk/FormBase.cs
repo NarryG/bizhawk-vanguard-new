@@ -35,8 +35,6 @@ namespace BizHawk.Client.EmuHawk
 		}
 
 		public void UpdateWindowTitle()
-			=> base.Text = Config?.UseStaticWindowTitles == true
-				? (_windowTitleStatic ??= WindowTitleStatic)
-				: WindowTitle;
+			=> base.Text = (_windowTitleStatic ??= WindowTitleStatic);
 	}
 }

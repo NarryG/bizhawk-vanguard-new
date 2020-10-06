@@ -42,7 +42,7 @@ namespace BizHawk.Client.Common
 			set => _currentMemoryDomain = value;
 		}
 
-		private IMemoryDomains DomainList
+		public IMemoryDomains DomainList
 		{
 			get
 			{

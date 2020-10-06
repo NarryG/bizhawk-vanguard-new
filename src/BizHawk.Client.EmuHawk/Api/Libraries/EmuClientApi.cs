@@ -40,7 +40,7 @@ namespace BizHawk.Client.EmuHawk
 		private readonly JoypadStringToEnumConverter JoypadConverter = new JoypadStringToEnumConverter();
 
 		/// <remarks>future humans: if this is broken, rewrite the caller instead if fixing it</remarks>
-		private SystemInfo RunningSystem
+		public SystemInfo RunningSystem
 		{
 			get
 			{
@@ -358,5 +358,50 @@ namespace BizHawk.Client.EmuHawk
 		public int Xpos() => _mainForm.DesktopLocation.X;
 
 		public int Ypos() => _mainForm.DesktopLocation.Y;
+		
+		//RTC_HIJACK - Here's where I'm adding all my extensions rather than adding my own API
+		public void StartAV(string videowritername, string filename, bool unattended)
+		{
+			((MainForm)_mainForm).RecordAvBase(videowritername, filename, unattended);
+		}
+		public void StopAV()
+		{
+			((MainForm) _mainForm).StopAv();
+		}
+		public void SaveConfig()
+		{
+			((MainForm) _mainForm).SaveConfig();
+		}
+		public void FocusMainform()
+		{
+			((MainForm) _mainForm).Focus();
+		}
+		
+		public void SetMainFormPosition(Point pos)
+		{
+			((MainForm) _mainForm).Location = pos;
+		}
+		public void SetMainFormSize(Size size)
+		{
+			((MainForm) _mainForm).Size = size;
+		}
+		public Size GetMainFormSize()
+		{
+			return ((MainForm) _mainForm).Size;
+		}
+		public Bitmap ScreenshotToBitmap()
+		{
+			return ((MainForm) _mainForm).MakeScreenshotImage().ToSysdrawingBitmap();
+		}
+		public Form GetMainForm()
+		{
+			return ((MainForm) _mainForm);
+		}
+		public String GetRomFullPath()
+		{
+			return ((MainForm) _mainForm).CurrentlyOpenRom;
+		}
+		public void SaveStateRTC(string path) => _mainForm.SaveState(path, Game.FilesystemSafeName());
+		public void LoadStateRTC(string path) => _mainForm.LoadState(path, Path.GetFileNameWithoutExtension(path));
 	}
 }

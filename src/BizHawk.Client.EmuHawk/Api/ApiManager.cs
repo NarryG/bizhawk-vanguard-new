@@ -53,8 +53,10 @@ namespace BizHawk.Client.EmuHawk
 		public static IExternalApiProvider Restart(IMainFormForApi mainForm, IEmulatorServiceProvider newServiceProvider)
 		{
 			GlobalWin.ClientApi = null;
+			RTCV.BizhawkVanguard.Hooks.ClearRTCApis();
 			_container = Register(mainForm, newServiceProvider, Console.WriteLine);
 			GlobalWin.ClientApi = _container.EmuClient as EmuClientApi;
+			RTCV.BizhawkVanguard.Hooks.SetRTCApis(_container);
 			return new BasicApiProvider(_container);
 		}
 

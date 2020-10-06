@@ -44,7 +44,7 @@ namespace BizHawk.Client.EmuHawk
 			if (_config.DispSpeedupFeatures == 1) rbDisplayMinimal.Checked = true;
 			if (_config.DispSpeedupFeatures == 0) rbDisplayAbsoluteZero.Checked = true;
 
-			cbStaticWindowTitles.Checked = _config.UseStaticWindowTitles;
+			cbStaticWindowTitles.Checked = true;
 
 			rbOpenGL.Checked = _config.DispMethod == EDispMethod.OpenGL;
 			rbGDIPlus.Checked = _config.DispMethod == EDispMethod.GdiPlus;
@@ -140,7 +140,7 @@ namespace BizHawk.Client.EmuHawk
 			if (rbDisplayMinimal.Checked) _config.DispSpeedupFeatures = 1;
 			if (rbDisplayAbsoluteZero.Checked) _config.DispSpeedupFeatures = 0;
 
-			_config.UseStaticWindowTitles = cbStaticWindowTitles.Checked;
+			_config.UseStaticWindowTitles = true;;
 
 			if (rbUseRaw.Checked)
 				_config.DispManagerAR = EDispManagerAR.None;

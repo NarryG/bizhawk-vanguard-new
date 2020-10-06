@@ -80,6 +80,18 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
 		<PackageReference Include="System.Net.Http" Version="4.3.4" />
+		<Reference Include="CorruptCore">
+		  <HintPath>..\..\..\RTCV\Build\CorruptCore.dll</HintPath>
+		  <Private>true</Private>
+		</Reference>
+		<Reference Include="NetCore">
+		  <HintPath>..\..\..\RTCV\Build\NetCore.dll</HintPath>
+		  <Private>true</Private>
+		</Reference>
+		<Reference Include="RTCV.Common">
+		  <HintPath>..\..\..\RTCV\Build\RTCV.Common.dll</HintPath>
+		  <Private>true</Private>
+		</Reference>
 		<Reference Include="System.Windows.Forms" />
 	</ItemGroup>
 	<ItemGroup>
@@ -87,6 +99,10 @@
 		<Reference Include="NLua, Version=1.3.2.0, Culture=neutral, processorArchitecture=MSIL" HintPath="$(ProjectDir)../../output/dll/nlua/NLua.dll" Private="true" SpecificVersion="false" />
 		<PackageReference Include="OpenTK.GLControl" Version="3.0.1" PrivateAssets="all" />
 		<Reference Include="SlimDX" HintPath="$(ProjectDir)../../References/x64/SlimDX.dll" Private="true" />
+		<Reference Include="Vanguard">
+		  <HintPath>..\..\..\RTCV\Build\Vanguard.dll</HintPath>
+		  <Private>true</Private>
+		</Reference>
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="$(ProjectDir)../BizHawk.Client.Common/BizHawk.Client.Common.csproj" />
@@ -605,5 +621,8 @@
 		<EmbeddedResource Update="tools/Watch/WatchEditor.resx" DependentUpon="WatchEditor.cs" />
 		<Compile Update="tools/Watch/WatchValueBox.cs" SubType="Component" />
 		<Compile Update="UpdateChecker.cs" SubType="Code" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="RTC\" />
 	</ItemGroup>
 </Project>

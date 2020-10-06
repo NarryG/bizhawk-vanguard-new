@@ -81,7 +81,7 @@ namespace BizHawk.Client.EmuHawk
 			FrameAdvSkipLagCheckbox.Checked = _config.SkipLagFrame;
 			LuaDuringTurboCheckbox.Checked = _config.RunLuaDuringTurbo;
 			cbMoviesOnDisk.Checked = _config.Movies.MoviesOnDisk;
-			cbSkipWaterboxIntegrityChecks.Checked = _config.SkipWaterboxIntegrityChecks;
+			cbSkipWaterboxIntegrityChecks.Checked = true; //RTC Hijack
 			NoMixedKeyPriorityCheckBox.Checked = _config.NoMixedInputHokeyOverride;
 
 			switch (_config.HostInputMethod)
