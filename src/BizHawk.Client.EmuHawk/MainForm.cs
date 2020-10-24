@@ -3730,8 +3730,14 @@ namespace BizHawk.Client.EmuHawk
 						Tools.Restart<LuaConsole>();
 					}
 
-					Config.RecentRoms.Add(openAdvancedArgs);
-					JumpLists.AddRecentItem(openAdvancedArgs, ioa.DisplayName);
+					//RTC_Hijack ignoring default.nes for Recent Menu
+					if (!(loader.CanonicalFullPath.Contains("\\ASSETS\\") || loader.CanonicalFullPath.Contains("\\TEMP\\") ||
+						loader.CanonicalFullPath.Contains("\\SKS\\") || loader.CanonicalFullPath.Contains("\\SSK\\" ) || loader.CanonicalFullPath.Contains("\\MP\\")))
+					{
+						Config.RecentRoms.Add(openAdvancedArgs);
+						JumpLists.AddRecentItem(openAdvancedArgs, ioa.DisplayName);
+					}//----------------------
+
 
 					// Don't load Save Ram if a movie is being loaded
 					if (!MovieSession.NewMovieQueued)
