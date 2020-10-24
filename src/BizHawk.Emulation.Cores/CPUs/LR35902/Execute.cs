@@ -11,7 +11,6 @@ namespace BizHawk.Emulation.Cores.Components.LR35902
 		public int instr_pntr = 0;
 		public ushort[] cur_instr = new ushort [60];
 		public ushort[] instr_table = new ushort[256 * 2 * 60 + 60 * 8];
-		public int opcode;
 		public bool CB_prefix;
 		public bool halted;
 		public bool stopped;
@@ -20,7 +19,7 @@ namespace BizHawk.Emulation.Cores.Components.LR35902
 
 		// unsaved variables
 		public bool checker;
-		byte interrupt_src_reg, interrupt_enable_reg;
+		byte interrupt_src_reg, interrupt_enable_reg, buttons_pressed;
 
 		public void BuildInstructionTable()
 		{

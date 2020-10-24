@@ -215,6 +215,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 					cur_DMA_dest = (ushort)((cur_DMA_dest & 0xFF00) | (HDMA_dest_lo & 0xF0));
 					break;
 				case 0xFF55: // HDMA5
+					//Console.WriteLine("hdma " + Core.cpu.TotalExecutedCycles);
 					if (!HDMA_active)
 					{
 						HDMA_mode = value.Bit(7);
@@ -826,8 +827,27 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 				window_tile_inc = 0;
 				window_started = true;
 				window_is_reset = false;
+
+				// don't evaluate sprites until pre-render for window is over
+				pre_render = true;
+				pre_render_2 = true;
 			}
-			
+
+			// hardware tests show that window takes effect before sprites when actiavted on the same pixel
+			if (!no_sprites && !pre_render_2 && (pixel_counter < 160))
+			{
+				for (int i = 0; i < SL_sprites_index; i++)
+				{
+					if ((pixel_counter >= (SL_sprites[i * 4 + 1] - 8)) &&
+						(pixel_counter < (SL_sprites[i * 4 + 1])) &&
+						!evaled_sprites.Bit(i))
+					{
+						going_to_fetch = true;
+						fetch_sprite = true;
+					}
+				}
+			}
+
 			if (!pre_render && !fetch_sprite)
 			{
 				// start shifting data into the LCD
@@ -923,28 +943,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 			}
 			
 			if (!fetch_sprite)
-			{
-				if (!pre_render_2)
-				{
-					// before we go on to read case 3, we need to know if we stall there or not
-					// Gekkio's tests show that if sprites are at position 0 or 1 (mod 8) 
-					// then it takes an extra cycle (1 or 2 more t-states) to process them
-
-					if (!no_sprites && (pixel_counter < 160))
-					{
-						for (int i = 0; i < SL_sprites_index; i++)
-						{
-							if ((pixel_counter >= (SL_sprites[i * 4 + 1] - 8)) &&
-								(pixel_counter < (SL_sprites[i * 4 + 1])) && 
-								!evaled_sprites.Bit(i))
-							{
-								going_to_fetch = true;
-								fetch_sprite = true;
-							}
-						}
-					}
-				}
-				
+			{				
 				switch (read_case)
 				{
 					case 0: // read a background tile
@@ -1004,11 +1003,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 						break;
 
 					case 2: // read from tile graphics (1)
-						if ((internal_cycle % 2) == 0)
-						{
-							pre_render_2 = false;
-						}
-						else
+						if ((internal_cycle % 2) == 1)
 						{
 							y_scroll_offset = (scroll_y + LY) % 8;
 
@@ -1044,6 +1039,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 							{
 								// here we set up rendering
 								pre_render = false;
+								pre_render_2 = false;
 
 								// window X is latched for the scanline, mid-line changes have no effect
 								window_x_latch = window_x;
@@ -1161,6 +1157,10 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 								// here we set up rendering
 								// unlike for the normal background case, there is no pre-render period for the window
 								// so start shifting in data to the screen right away
+								pre_render = false;
+								pre_render_2 = false;
+								first_fetch = true;
+
 								if (window_x_latch <= 7)
 								{
 									if (scroll_offset == 0)
@@ -1175,7 +1175,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 
 									render_offset = 7 - window_x_latch;
 
-									sprite_scroll_offset = 8 - (window_x_latch + 8 - 7) % 8;
+									sprite_scroll_offset = (8 - (window_x_latch + 8 - 7) % 8) % 8;
 								}
 								else
 								{
@@ -1183,7 +1183,7 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 									read_case = 4;
 									render_counter = 8;
 
-									sprite_scroll_offset = 8 - (window_x_latch - 7) % 8;
+									sprite_scroll_offset = (8 - (window_x_latch - 7) % 8) % 8;
 								}
 
 								latch_counter = 0;
@@ -1346,6 +1346,8 @@ namespace BizHawk.Emulation.Cores.Nintendo.GBHawk
 							}
 						}
 					}
+
+					sprite_fetch_counter -= 1;
 
 					total_counter += sprite_fetch_counter;
 

@@ -105,7 +105,7 @@
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="$(ProjectDir)../BizHawk.Client.Common/BizHawk.Client.Common.csproj" />
+		<ProjectReference Include="$(ProjectDir)../BizHawk.Bizware.DirectX/BizHawk.Bizware.DirectX.csproj" />
 		<ProjectReference Include="$(ProjectDir)../BizHawk.WinForms.Controls/BizHawk.WinForms.Controls.csproj" />
 		<Compile Include="$(ProjectDir)../BizHawk.Common/OSTailoredCode.cs" />
 		<Compile Remove="Properties/Settings.Designer.cs" />

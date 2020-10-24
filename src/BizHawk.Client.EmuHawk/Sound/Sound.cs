@@ -1,18 +1,23 @@
 ﻿using System;
 using System.Threading;
 
+using BizHawk.Bizware.DirectX;
 using BizHawk.Emulation.Common;
 using BizHawk.Client.Common;
 using BizHawk.Common;
 
 namespace BizHawk.Client.EmuHawk
 {
-	public class Sound : IDisposable
+	/// <remarks>TODO rename to <c>HostAudioManager</c></remarks>
+	public class Sound : IHostAudioManager, IDisposable
 	{
-		public const int SampleRate = 44100;
-		public const int BytesPerSample = 2;
-		public const int ChannelCount = 2;
-		public const int BlockAlign = BytesPerSample * ChannelCount;
+		public int SampleRate { get; } = 44100;
+
+		public int BytesPerSample { get; } = 2;
+
+		public int ChannelCount { get; } = 2;
+
+		public int BlockAlign { get; }
 
 		private bool _disposed;
 		private readonly ISoundOutput _outputDevice;
@@ -20,8 +25,14 @@ namespace BizHawk.Client.EmuHawk
 		private readonly BufferedAsync _bufferedAsync = new BufferedAsync(); // Buffer for Async sources
 		private IBufferedSoundProvider _bufferedProvider; // One of the preceding buffers, or null if no source is set
 
+		public int ConfigBufferSizeMs => GlobalWin.Config.SoundBufferSizeMs;
+
+		public string ConfigDevice => GlobalWin.Config.SoundDevice;
+
 		public Sound(IntPtr mainWindowHandle)
 		{
+			BlockAlign = BytesPerSample * ChannelCount;
+
 			if (OSTailoredCode.IsUnixHost)
 			{
 				// if DirectSound or XAudio is chosen, use OpenAL, otherwise comply with the user's choice
@@ -69,7 +80,7 @@ namespace BizHawk.Client.EmuHawk
 
 			_outputProvider.MaxSamplesDeficit = _outputDevice.MaxSamplesDeficit;
 
-			SoundMaxBufferDeficitMs = (int)Math.Ceiling(SamplesToMilliseconds(_outputDevice.MaxSamplesDeficit));
+			SoundMaxBufferDeficitMs = (int) Math.Ceiling(this.SamplesToMilliseconds(_outputDevice.MaxSamplesDeficit));
 
 			IsStarted = true;
 		}
@@ -119,7 +130,7 @@ namespace BizHawk.Client.EmuHawk
 
 		public bool LogUnderruns { get; set; }
 
-		internal void HandleInitializationOrUnderrun(bool isUnderrun, ref int samplesNeeded)
+		public void HandleInitializationOrUnderrun(bool isUnderrun, ref int samplesNeeded)
 		{
 			// Fill device buffer with silence but leave enough room for one frame
 			int samplesPerFrame = (int)Math.Round(SampleRate / (double)GlobalWin.Emulator.VsyncRate());
@@ -217,16 +228,6 @@ namespace BizHawk.Client.EmuHawk
 			}
 
 			_outputDevice.WriteSamples(samples, sampleOffset, sampleCount);
-		}
-
-		public static int MillisecondsToSamples(int milliseconds)
-		{
-			return milliseconds * SampleRate / 1000;
-		}
-
-		public static double SamplesToMilliseconds(int samples)
-		{
-			return samples * 1000.0 / SampleRate;
 		}
 	}
 }
