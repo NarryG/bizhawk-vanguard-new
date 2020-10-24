@@ -658,7 +658,12 @@ namespace RTCV.BizhawkVanguard
 		{
 			try
 			{
-				return GlobalWin.Config.PreferredCores[systemName];
+				if(GlobalWin.Config.PreferredCores.TryGetValue(systemName, out var core))
+				{
+					return core;
+				}
+
+				return systemName;
 			}
 			catch (Exception ex)
 			{
