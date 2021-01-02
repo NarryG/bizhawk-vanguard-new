@@ -598,7 +598,7 @@ namespace RTCV.BizhawkVanguard
 
 					//TODO: Add more domains for cores like gamegear, atari, turbo graphx
 			}
-
+			domainBlacklist.Add("Waterbox PageData");
 			return domainBlacklist.ToArray(); ;
 		}
 
