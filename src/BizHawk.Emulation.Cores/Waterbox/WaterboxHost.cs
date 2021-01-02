@@ -59,13 +59,13 @@ namespace BizHawk.Emulation.Cores.Waterbox
 		/// DO NOT SET THIS TO TRUE.  A different executable most likely means different meanings for memory locations,
 		/// and nothing will make sense.
 		/// </summary>
-		public bool SkipCoreConsistencyCheck { get; set; } = false;
+		public bool SkipCoreConsistencyCheck { get; set; } = true;
 
 		/// <summary>
 		/// Skips the check that the initial memory state (after init, but before any running) matches from state save to state load.
 		/// DO NOT SET THIS TO TRUE.  The initial memory state must be the same for the XORed memory contents in the savestate to make sense.
 		/// </summary>
-		public bool SkipMemoryConsistencyCheck { get; set; } = false;
+		public bool SkipMemoryConsistencyCheck { get; set; } = true;
 	}
 
 	public unsafe class WaterboxHost : IMonitor, IImportResolver, IStatable, IDisposable, ICallbackAdjuster
@@ -290,7 +290,8 @@ namespace BizHawk.Emulation.Cores.Waterbox
 
 			public override void PokeByte(long addr, byte val)
 			{
-				throw new InvalidOperationException();
+				//RTC_Hijack null this out;
+				//throw new InvalidOperationException();
 			}
 		}
 
